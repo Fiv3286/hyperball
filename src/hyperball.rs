@@ -12,7 +12,7 @@ pub fn regularball(graph: UnGraph<(), (), u32>) -> Vec<i64> {
 }
 
 
-pub fn hyperball(graph: UnGraph<(), (), u32>, precision:u8) -> Vec<HyperLogLogPlus<u8, RandomState>> {
+pub fn hyperball(graph: UnGraph<(), (), u32>, precision:u8) -> Vec<(u8, Vec<HyperLogLogPlus<u8, RandomState>>)> {
 
     // ; initialize array c with n HyperLogLogs 
     let mut hllp_counters:Vec<HyperLogLogPlus<u8, RandomState>> = Vec::with_capacity(graph.node_count()); // will panic if graph too large n that's okay
@@ -20,13 +20,15 @@ pub fn hyperball(graph: UnGraph<(), (), u32>, precision:u8) -> Vec<HyperLogLogPl
     for _i in 0..graph.node_count() {
         hllp_counters.push(HyperLogLogPlus::new(precision, RandomState::new()).unwrap());
     }
-    
-    println!("{:?}", hllp_counters.len());
+    // println!("{:?}", hllp_counters.len());
 
     for i in graph.node_identifiers() {
         let index = i.index();
         hllp_counters[index].insert(&(index as u8));
     }
+
+    // initialize logbook ; since capacity 0 will re-allocate constantly.... good thing itls only accessed once every t++1 iteration. 
+    let mut logbook:Vec<(u8, Vec<HyperLogLogPlus<u8, RandomState>>)> = Vec::with_capacity(0);
 
     // this block needs to iterate until there's no change anymore. 
     let mut t = 1;
@@ -62,16 +64,19 @@ pub fn hyperball(graph: UnGraph<(), (), u32>, precision:u8) -> Vec<HyperLogLogPl
             };
 
             //update checksum. 
-            // value we're interested in was supposed to be harmonic mean? 
+
+            logbook.push((t, hllp_counters.clone()));
+
             t+=1;
-        
+            
             new_sum = hllp_counters.iter_mut().fold(None, |acc, element| {
                 match acc {
                     None => Some(element.count()),
                     Some(merged_value) => Some(merged_value + element.count()),
                 }
             }).unwrap();
-
+            
+            // value we're interested in was supposed to be harmonic mean? 
             let new_harmonic_mean: (f64, i32) = hllp_counters.iter_mut().fold((0.0, 0), |acc: (f64, i32), element: &mut HyperLogLogPlus<u8, RandomState>| {
                 (acc.0 + 1.0 / element.count(), acc.1 + 1)
             });
@@ -85,7 +90,7 @@ pub fn hyperball(graph: UnGraph<(), (), u32>, precision:u8) -> Vec<HyperLogLogPl
 
 
 
-            println!("t={:?} oldsum {:?} newsum {:?} mean {:?}", t, old_sum, new_sum, harmonic_mean);
+            // println!("t={:?} oldsum {:?} newsum {:?} mean {:?}", t, old_sum, new_sum, harmonic_mean);
         
             // iteration 1 now complete; check if changed 
     }
@@ -96,9 +101,8 @@ pub fn hyperball(graph: UnGraph<(), (), u32>, precision:u8) -> Vec<HyperLogLogPl
 
     // for each vertex (in neighborhood?)
 
-    println!("wooo we actually terminated?");
-    hllp_counters
-
+    // println!("wooo we actually terminated?");
+    logbook
 // function to combine counter M and N b pairwise comparison of elements; library "merge" method 
 
 //  add(c[v], v) -> get counter @ v, add it's own vertex into it 

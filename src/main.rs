@@ -32,45 +32,51 @@ fn main() {
     let precision:u8 = 8;
     let mut rng = rand::thread_rng();
 
-    let v_size: Vec<i64> = (1_000..=10_000).step_by(1_000).collect();
-
-    // Assuming you want e_size to be based on the v_size values and a fixed ratio
-    let ratio = 10.0;  // Replace with your desired ratio
-
-    let e_size: Vec<i64> = v_size.iter().map(|&v| (v as f64 * ratio).floor() as i64).collect();
-
-    // Print results
-    for (v, e) in v_size.iter().zip(&e_size) {
-        println!("v_size: {}, e_size: {}", v, e);
+    let ratios: Vec<f64> = (0..=100).map(|x| f64::from(x) *0.1).collect();
     
-    let _points: Vec<()> = v_size
-    .iter()
-    .zip(e_size.iter())
-    .map(|(v, e)| {
-        let n = *v as usize;
-        let m = *e as usize;
-        let g: UnGraph<(), ()> = random_gnm_graph(&mut rng, n, m);
-
-        // let (time, _) = mst_time(g);
-        let hllp_counters = hyperball(g, precision);
-
-        let mut merged_counter = hllp_counters
-        .into_iter()
-        .fold(
-            HyperLogLogPlus::new(8, RandomState::new()).unwrap(),
-            |acc: HyperLogLogPlus<u8, RandomState>, counter| {
-                let mut acc = acc; // Convert acc to a mutable variable
-                acc.merge(&counter).unwrap(); // Merge by taking a reference
-                acc
-            },
-        );
-        merged_counter.count();
-
-        // let result = (n as u64, time.as_micros() as f64);
-        println!("generated hyperball for size {:?} x {:?} without crashing!", n, m);
-    })
-    .collect();
+    for ratio in ratios.iter() {
+        println!("{:?}", ratio);
+        
+        let v_size: Vec<i64> = (1_000..=10_000).step_by(5_000).collect();
+    
+        let e_size: Vec<i64> = v_size.iter().map(|&v| (v as f64 * ratio).floor() as i64).collect();
+    
+        // Print results
+        for (v, e) in v_size.iter().zip(&e_size) {
+            println!("v_size: {}, e_size: {}", v, e);
+        
+            let _points: Vec<()> = v_size
+            .iter()
+            .zip(e_size.iter())
+            .map(|(v, e)| {
+                let n = *v as usize;
+                let m = *e as usize;
+                let g: UnGraph<(), ()> = random_gnm_graph(&mut rng, n, m);
+    
+                // let (time, _) = mst_time(g);
+                let logbook = hyperball(g, precision);
+                let (_t, hllp_counters) = logbook.last().unwrap();
+                    
+                let mut merged_counter = hllp_counters
+                .into_iter()
+                .fold(
+                    HyperLogLogPlus::new(8, RandomState::new()).unwrap(),
+                    |acc: HyperLogLogPlus<u8, RandomState>, counter| {
+                        let mut acc = acc; // Convert acc to a mutable variable
+                        acc.merge(&counter).unwrap(); // Merge by taking a reference
+                        acc
+                    },
+                );
+                merged_counter.count();
+    
+                // let result = (n as u64, time.as_micros() as f64);
+                println!("generated hyperball for size {:?} x {:?} without crashing!", n, m);
+            })
+            .collect();
+        }
     }
+    
+
 
 
 
