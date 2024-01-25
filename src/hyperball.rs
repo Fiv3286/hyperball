@@ -3,14 +3,22 @@ use std::collections::hash_map::RandomState;
 use hyperloglogplus::{HyperLogLog, HyperLogLogPlus};
 use petgraph::{graph::UnGraph, visit::IntoNodeIdentifiers};
 
+pub fn regularball(graph: UnGraph<(), (), u32>) -> Vec<i64> { 
+    let mut int_counters = Vec::with_capacity(graph.node_count());
+    for _i in 0..graph.node_count() {
+        int_counters.push(0i64);
+    }
+    int_counters
+}
 
-pub fn hyperball(graph: UnGraph<(), (), u32>) -> Vec<HyperLogLogPlus<u8, RandomState>> {
+
+pub fn hyperball(graph: UnGraph<(), (), u32>, precision:u8) -> Vec<HyperLogLogPlus<u8, RandomState>> {
 
     // ; initialize array c with n HyperLogLogs 
     let mut hllp_counters:Vec<HyperLogLogPlus<u8, RandomState>> = Vec::with_capacity(graph.node_count()); // will panic if graph too large n that's okay
 
     for _i in 0..graph.node_count() {
-        hllp_counters.push(HyperLogLogPlus::new(8, RandomState::new()).unwrap());
+        hllp_counters.push(HyperLogLogPlus::new(precision, RandomState::new()).unwrap());
     }
     
     println!("{:?}", hllp_counters.len());
@@ -52,6 +60,9 @@ pub fn hyperball(graph: UnGraph<(), (), u32>) -> Vec<HyperLogLogPlus<u8, RandomS
                 // println!("update node {:?} counter {:?} -> {:?}", i, oldcount, accumulator.count());
                 hllp_counters[index] = accumulator;
             };
+
+            //update checksum. 
+            // value we're interested in was supposed to be harmonic mean? 
             t+=1;
         
             new_sum = hllp_counters.iter_mut().fold(None, |acc, element| {
@@ -61,7 +72,20 @@ pub fn hyperball(graph: UnGraph<(), (), u32>) -> Vec<HyperLogLogPlus<u8, RandomS
                 }
             }).unwrap();
 
-            println!("t={:?} oldsum {:?} newsum {:?}", t, old_sum, new_sum);
+            let new_harmonic_mean: (f64, i32) = hllp_counters.iter_mut().fold((0.0, 0), |acc: (f64, i32), element: &mut HyperLogLogPlus<u8, RandomState>| {
+                (acc.0 + 1.0 / element.count(), acc.1 + 1)
+            });
+            
+            let harmonic_mean: f64 = if new_harmonic_mean.1 == 0 {
+                0.0 // Handle division by zero if the iterator is empty
+            } else {
+                new_harmonic_mean.1 as f64 / new_harmonic_mean.0
+            };
+
+
+
+
+            println!("t={:?} oldsum {:?} newsum {:?} mean {:?}", t, old_sum, new_sum, harmonic_mean);
         
             // iteration 1 now complete; check if changed 
     }

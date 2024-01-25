@@ -29,11 +29,20 @@ fn mst_time(g: Graph<(), (), Undirected>) -> (Duration, UnGraph<(), ()>) {
 
 
 fn main() {
+    let precision:u8 = 8;
     let mut rng = rand::thread_rng();
 
-    let v_size: Vec<i64> = (1_000..=1000_000).step_by(1_000).collect();
-    let e_size: Vec<i64> = (1_000..=2000_000).step_by(2_000).collect();
+    let v_size: Vec<i64> = (1_000..=10_000).step_by(1_000).collect();
 
+    // Assuming you want e_size to be based on the v_size values and a fixed ratio
+    let ratio = 10.0;  // Replace with your desired ratio
+
+    let e_size: Vec<i64> = v_size.iter().map(|&v| (v as f64 * ratio).floor() as i64).collect();
+
+    // Print results
+    for (v, e) in v_size.iter().zip(&e_size) {
+        println!("v_size: {}, e_size: {}", v, e);
+    
     let _points: Vec<()> = v_size
     .iter()
     .zip(e_size.iter())
@@ -43,7 +52,7 @@ fn main() {
         let g: UnGraph<(), ()> = random_gnm_graph(&mut rng, n, m);
 
         // let (time, _) = mst_time(g);
-        let hllp_counters = hyperball(g);
+        let hllp_counters = hyperball(g, precision);
 
         let mut merged_counter = hllp_counters
         .into_iter()
@@ -57,13 +66,11 @@ fn main() {
         );
         merged_counter.count();
 
-
-
         // let result = (n as u64, time.as_micros() as f64);
         println!("generated hyperball for size {:?} x {:?} without crashing!", n, m);
     })
     .collect();
-
+    }
 
 
 
