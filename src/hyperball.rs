@@ -55,12 +55,12 @@ pub fn hyperball(graph: UnGraph<(), (), u32>, precision:u8) -> Vec<(u8, Vec<Hype
                 hllp_counters[index] = accumulator;
             };
 
-            //update checksum. 
-
-            logbook.push((t, hllp_counters.clone()));
-
+            
+            // logbook.push((t, hllp_counters.clone()));
+            
             t+=1;
             
+            //update checksum. 
             new_sum = hllp_counters.iter_mut().fold(None, |acc, element| {
                 match acc {
                     None => Some(element.count()),
@@ -68,7 +68,6 @@ pub fn hyperball(graph: UnGraph<(), (), u32>, precision:u8) -> Vec<(u8, Vec<Hype
                 }
             }).unwrap();
             
-            // value we're interested in was supposed to be harmonic mean? 
             let new_harmonic_mean: (f64, i32) = hllp_counters.iter_mut().fold((0.0, 0), |acc: (f64, i32), element: &mut HyperLogLogPlus<u8, RandomState>| {
                 (acc.0 + 1.0 / element.count(), acc.1 + 1)
             });
@@ -79,19 +78,17 @@ pub fn hyperball(graph: UnGraph<(), (), u32>, precision:u8) -> Vec<(u8, Vec<Hype
                 new_harmonic_mean.1 as f64 / new_harmonic_mean.0
             };
             // println!("t={:?} oldsum {:?} newsum {:?} mean {:?}", t, old_sum, new_sum, harmonic_mean);
-        
-            // iteration 1 now complete; check if changed 
+            println!("t={:?} mean {:?}", t,  harmonic_mean);
+     
     }
     println!("value stable after {:?} iterations", t);
-
-
-
+    logbook
+}
 
 
     // for each vertex (in neighborhood?)
 
     // println!("wooo we actually terminated?");
-    logbook
 // function to combine counter M and N b pairwise comparison of elements; library "merge" method 
 
 //  add(c[v], v) -> get counter @ v, add it's own vertex into it 
@@ -100,10 +97,9 @@ pub fn hyperball(graph: UnGraph<(), (), u32>, precision:u8) -> Vec<(u8, Vec<Hype
 
 // looop ; 
 //     for each v in n 
+
 //      a 
 
-
-}
 
 // based on [[1308.2144.pdf#page=4]]
 

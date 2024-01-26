@@ -11,6 +11,7 @@ use petgraph_gen::random_gnm_graph;
 use petgraph::data::FromElements;
 use rand::rngs::StdRng;
 use rand::RngCore;
+use core::panic;
 use std::collections::hash_map::RandomState;
 use std::collections::HashSet;
 use std::error::Error;
@@ -28,8 +29,15 @@ fn mst_time(g: Graph<(), (), Undirected>) -> (Duration, UnGraph<(), ()>) {
 }
 
 fn main() {
-    let precision: u8 = 16;
+
     let mut rng = rand::thread_rng();
+    let precision: u8 = 8;
+
+    let g: UnGraph<(), ()> = random_gnm_graph(&mut rng, 10_000_000, 20_000_000);
+    let logbook: Vec<(u8, Vec<HyperLogLogPlus<u8, RandomState>>)> = hyperball(g, precision);
+
+    panic!("stop");
+    ///
 
     let ratios: Vec<f64> = (30..=60).map(|x| f64::from(x) * 0.01).collect(); // 0 to 100, / 100 to generate floats for ratio.
 
