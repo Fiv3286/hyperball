@@ -1,5 +1,4 @@
 pub mod hyperball;
-pub mod plot;
 pub mod rand_graph;
 
 use csv::WriterBuilder;
@@ -10,11 +9,6 @@ use petgraph::{Graph, Undirected};
 use petgraph_gen::random_gnm_graph;
 
 use petgraph::data::FromElements;
-use plotters::backend::BitMapBackend;
-use plotters::chart::ChartBuilder;
-use plotters::data::float;
-use plotters::drawing::IntoDrawingArea;
-use plotters::prelude::*;
 use rand::rngs::StdRng;
 use rand::RngCore;
 use std::collections::hash_map::RandomState;
@@ -90,7 +84,7 @@ fn main() {
 
 
 
-                    let result = |data: Vec<(f64, f64, f64)>| -> Result<(), Box<dyn Error>> {
+                    let _result = |data: Vec<(f64, f64, f64)>| -> Result<(), Box<dyn Error>> {
                         // Your dat
                 
                         let csv_file_path = &format!("images/{}x{}.csv", v, e);
