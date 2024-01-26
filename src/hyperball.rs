@@ -47,19 +47,11 @@ pub fn hyperball(graph: UnGraph<(), (), u32>, precision:u8) -> Vec<(u8, Vec<Hype
 
             for i in graph.node_identifiers() {
                 let index = i.index();
-                // 
-                // let oldcount = hllp_counters[index].count();
                 let mut accumulator = hllp_counters[index].clone(); // probably expensive
                 for neighbor in graph.neighbors(i) {
                     let nindex = neighbor.index();
                     accumulator.merge(&hllp_counters[nindex]).unwrap();
-                    // let (first, rest) = hllp_counters.split_at_mut(index);
-                    // let (value1, value2) = first.split_at_mut(index);
-                    // value1[0].merge(&value2[0]);
-                    
                 }
-                // mutate main counter to be updated value
-                // println!("update node {:?} counter {:?} -> {:?}", i, oldcount, accumulator.count());
                 hllp_counters[index] = accumulator;
             };
 
@@ -86,14 +78,11 @@ pub fn hyperball(graph: UnGraph<(), (), u32>, precision:u8) -> Vec<(u8, Vec<Hype
             } else {
                 new_harmonic_mean.1 as f64 / new_harmonic_mean.0
             };
-
-
-
-
             // println!("t={:?} oldsum {:?} newsum {:?} mean {:?}", t, old_sum, new_sum, harmonic_mean);
         
             // iteration 1 now complete; check if changed 
     }
+    println!("value stable after {:?} iterations", t);
 
 
 
